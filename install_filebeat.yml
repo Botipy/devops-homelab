@@ -1,0 +1,30 @@
+---
+- name: Instalacja Filebeat
+  hosts: serwery
+  become: true
+
+  tasks:
+    - name: Dodaj klucz GPG Elastic
+      shell: curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/elasticsearch-keyring.gpg
+
+    - name: Dodaj repo Elastic
+      shell: echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main" | tee /etc/apt/sources.list.d/elastic-8.x.list
+      args:
+        creates: /etc/apt/sources.list.d/elastic-8.x.list
+
+    - name: Aktualizuj apt
+      apt:
+        update_cache: yes
+
+    - name: Zainstaluj Filebeat
+      apt:
+        name: filebeat
+        state: present
+
+    - name: Uruchom i włącz Filebeat
+      systemd:
+        name: filebeat
+        enabled: yes
+        state: started
